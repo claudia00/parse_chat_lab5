@@ -18,6 +18,6 @@ public class ChatApplication extends Application {
                 .applicationId("simplechat-client") // should correspond to APP_ID env variable
                 //.clientBuilder(builder)
                 .server("https://codepath-chat-lab.herokuapp.com/parse/").build());
-
+                //.addNetworkInterceptor(new ParseLogInterceptor()).build());
     }
 }
