@@ -50,7 +50,7 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         public void run() {
             refreshMessages();
-            //myHandler.postDelayed(this, POLL_INTERVAL);
+            myHandler.postDelayed(this, POLL_INTERVAL);
         }
     };
 
@@ -66,7 +66,8 @@ public class ChatActivity extends AppCompatActivity {
         } else { // If not logged in, login as a new anonymous user
             login();
         }
-        myHandler.postDelayed(mRefreshMessagesRunnable, POLL_INTERVAL);
+        //was used before live queries -- step 12
+        //myHandler.postDelayed(mRefreshMessagesRunnable, POLL_INTERVAL);
     }
 
     // Get the userId from the cached currentUser object
@@ -89,6 +90,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
+
 
 
 
@@ -127,15 +129,17 @@ public class ChatActivity extends AppCompatActivity {
                 message.saveInBackground(new SaveCallback() {
                     @Override
                     public void done(ParseException e) {
-                        if (e == null) {
-                            Toast.makeText(ChatActivity.this, "Successfully created message on Parse",
-                                    Toast.LENGTH_SHORT).show();
-                            refreshMessages();
-                        } else {
-                            Log.e(TAG, "Failed to save message", e);
-                        }
+                        // if (e == null) {
+                        Toast.makeText(ChatActivity.this, "Successfully created message on Parse",
+                                Toast.LENGTH_SHORT).show();
+                        refreshMessages();
                     }
-                });
+                    });
+                            // }
+                        //else{
+                    //        Log.e(TAG, "Failed to save message", e);}
+//                    }
+//                });
                 etMessage.setText(null);
             }
         });
@@ -144,32 +148,12 @@ public class ChatActivity extends AppCompatActivity {
     // Query messages from Parse so we can load them into the chat adapter
     void refreshMessages() {
         // TODO:
-        ParseLiveQueryClient parseLiveQueryClient = ParseLiveQueryClient.Factory.getClient();
 
         // Construct query to execute
         ParseQuery<Message> query = ParseQuery.getQuery(Message.class);
         // This query can even be more granular (i.e. only refresh if the entry was added by some other user)
         // parseQuery.whereNotEqualTo(USER_ID_KEY, ParseUser.getCurrentUser().getObjectId());
 
-        // Connect to Parse server
-        SubscriptionHandling<Message> subscriptionHandling = parseLiveQueryClient.subscribe(query);
-        // Listen for CREATE events
-        subscriptionHandling.handleEvent(SubscriptionHandling.Event.CREATE, new
-                SubscriptionHandling.HandleEventCallback<Message>() {
-                    @Override
-                    public void onEvent(ParseQuery<Message> query, Message object) {
-                        mMessages.add(0, object);
-
-                        // RecyclerView updates need to be run on the UI thread
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mAdapter.notifyDataSetChanged();
-                                rvChat.scrollToPosition(0);
-                            }
-                        });
-                    }
-                });
 
         // Configure limit and sort order
         query.setLimit(MAX_CHAT_MESSAGES_TO_SHOW);

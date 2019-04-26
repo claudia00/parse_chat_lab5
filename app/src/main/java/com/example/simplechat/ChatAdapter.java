@@ -89,4 +89,4 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             body = (TextView) itemView.findViewById(R.id.tvBody);
         }
     }
-    }
+}

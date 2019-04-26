@@ -12,6 +12,7 @@ public class ChatApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        ParseObject.registerSubclass(Message.class);
 
         // set applicationId and server based on the values in the Heroku settings.
         // any network interceptors must be added with the Configuration Builder given this syntax
@@ -20,9 +21,9 @@ public class ChatApplication extends Application {
                 //.clientBuilder(builder)
                 .server("https://codepath-chat-lab.herokuapp.com/parse/").build());
                 //.addNetworkInterceptor(new ParseLogInterceptor()).build());
-        ParseObject.registerSubclass(Message.class);
 
-
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor();
 
     }
 }
