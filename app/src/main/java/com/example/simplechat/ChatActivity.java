@@ -15,12 +15,12 @@ import com.parse.FindCallback;
 import com.parse.LogInCallback;
 import com.parse.ParseAnonymousUtils;
 import com.parse.ParseException;
-import com.parse.ParseLiveQueryClient;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
-import com.parse.SubscriptionHandling;
+import com.parse.livequery.ParseLiveQueryClient;
+import com.parse.livequery.SubscriptionHandling;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +68,33 @@ public class ChatActivity extends AppCompatActivity {
         }
         //was used before live queries -- step 12
         //myHandler.postDelayed(mRefreshMessagesRunnable, POLL_INTERVAL);
+        ParseLiveQueryClient parseLiveQueryClient = ParseLiveQueryClient.Factory.getClient();
+
+        ParseQuery<Message> parseQuery = ParseQuery.getQuery(Message.class);
+        // This query can even be more granular (i.e. only refresh if the entry was added by some other user)
+        // parseQuery.whereNotEqualTo(USER_ID_KEY, ParseUser.getCurrentUser().getObjectId());
+
+        // Connect to Parse server
+        SubscriptionHandling<Message> subscriptionHandling = parseLiveQueryClient.subscribe(parseQuery);
+
+        // Listen for CREATE events
+        subscriptionHandling.handleEvent(SubscriptionHandling.Event.CREATE, new
+                SubscriptionHandling.HandleEventCallback<Message>() {
+                    @Override
+                    public void onEvent(ParseQuery<Message> query, Message object) {
+                        mMessages.add(0, object);
+
+                        // RecyclerView updates need to be run on the UI thread
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mAdapter.notifyDataSetChanged();
+                                rvChat.scrollToPosition(0);
+                            }
+                        });
+                    }
+                });
+
     }
 
     // Get the userId from the cached currentUser object
@@ -114,34 +141,27 @@ public class ChatActivity extends AppCompatActivity {
 
 
         // When send button is clicked, create message object on Parse
-        btSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String data = etMessage.getText().toString();
+        btSend.setOnClickListener(v -> {
+            String data = etMessage.getText().toString();
 //                ParseObject message = ParseObject.create("Message");
 //                message.put(USER_ID_KEY, ParseUser.getCurrentUser().getObjectId());
 //                message.put(BODY_KEY, data);
-                // Using new `Message` Parse-backed model now
-                Message message = new Message();
-                message.setBody(data);
-                message.setUserId(ParseUser.getCurrentUser().getObjectId());
+            // Using new `Message` Parse-backed model now
+            Message message = new Message();
+            message.setBody(data);
+            message.setUserId(ParseUser.getCurrentUser().getObjectId());
 
-                message.saveInBackground(new SaveCallback() {
-                    @Override
-                    public void done(ParseException e) {
-                        // if (e == null) {
-                        Toast.makeText(ChatActivity.this, "Successfully created message on Parse",
-                                Toast.LENGTH_SHORT).show();
-                        refreshMessages();
-                    }
-                    });
-                            // }
-                        //else{
-                    //        Log.e(TAG, "Failed to save message", e);}
-//                    }
-//                });
-                etMessage.setText(null);
-            }
+            message.saveInBackground(new SaveCallback() {
+                @Override
+                public void done(ParseException e) {
+                    // if (e == null) {
+                    Toast.makeText(ChatActivity.this, "Successfully created message on Parse",
+                            Toast.LENGTH_SHORT).show();
+                    refreshMessages();
+                }
+                });
+
+            etMessage.setText(null);
         });
 
     }
